@@ -29,7 +29,7 @@ def handle_api_errors(fn: Callable[..., Coroutine[Any, Any, str]]) -> Callable[.
             return await fn(*args, **kwargs)
         except ProductboardAPIError as e:
             if e.status_code == 404:
-                return f"Error: resource not found."
+                return "Error: resource not found."
             if e.status_code == 401:
                 return "Error: authentication failed — check your API token."
             if e.status_code == 403:

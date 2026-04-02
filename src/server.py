@@ -622,6 +622,70 @@ async def delete_note(
     return f"Note {id} deleted."
 
 
+# Note links and tags
+
+
+@mcp.tool()
+@handle_api_errors
+async def link_note_to_entity(
+    note_id: str = Field(description="Note UUID"),
+    entity_id: str = Field(description="Entity UUID (feature, objective, etc.)"),
+) -> str:
+    """Link a note to a hierarchy entity (e.g. feature)."""
+    await api.post(f"/notes/{note_id}/links/{entity_id}")
+    return f"Note {note_id} linked to entity {entity_id}."
+
+
+@mcp.tool()
+@handle_api_errors
+async def list_note_links(
+    note_id: str = Field(description="Note UUID"),
+) -> str:
+    """List entities linked to a note."""
+    items = await _paginated_get(f"/notes/{note_id}/links")
+    if not items:
+        return "No entities linked to this note."
+    lines = [f"{len(items)} linked entities:\n"]
+    for e in items:
+        lines.append(f"  - {e.get('type', '?')}: {e.get('id', '?')}")
+    return "\n".join(lines)
+
+
+@mcp.tool()
+@handle_api_errors
+async def add_note_tag(
+    note_id: str = Field(description="Note UUID"),
+    tag_name: str = Field(description="Tag name to add"),
+) -> str:
+    """Add a tag to a note."""
+    await api.post(f"/notes/{note_id}/tags/{tag_name}")
+    return f"Tag '{tag_name}' added to note {note_id}."
+
+
+@mcp.tool()
+@handle_api_errors
+async def remove_note_tag(
+    note_id: str = Field(description="Note UUID"),
+    tag_name: str = Field(description="Tag name to remove"),
+) -> str:
+    """Remove a tag from a note."""
+    await api.delete(f"/notes/{note_id}/tags/{tag_name}")
+    return f"Tag '{tag_name}' removed from note {note_id}."
+
+
+@mcp.tool()
+@handle_api_errors
+async def list_note_tags(
+    note_id: str = Field(description="Note UUID"),
+) -> str:
+    """List tags on a note."""
+    items = await _paginated_get(f"/notes/{note_id}/tags")
+    if not items:
+        return "No tags on this note."
+    tag_names = [t.get("name", str(t)) if isinstance(t, dict) else str(t) for t in items]
+    return f"Tags: {', '.join(tag_names)}"
+
+
 # ───────────────────────────────────────────────────────────────────────────
 # Objectives
 # ───────────────────────────────────────────────────────────────────────────

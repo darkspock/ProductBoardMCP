@@ -2,7 +2,7 @@
 
 A lightweight [MCP](https://modelcontextprotocol.io) server that gives Claude (and any MCP client) full access to the [Productboard API v1](https://developer.productboard.com). Built with [FastMCP](https://github.com/jlowin/fastmcp).
 
-## Tools (60)
+## Tools (65)
 
 | Category | Tools | Count |
 |----------|-------|-------|
@@ -12,6 +12,7 @@ A lightweight [MCP](https://modelcontextprotocol.io) server that gives Claude (a
 | **Products** | `list_products`, `get_product`, `update_product` | 3 |
 | **Components** | `list_components`, `get_component`, `create_component`, `update_component` | 4 |
 | **Notes** | `list_notes`, `get_note`, `create_note`, `update_note`, `delete_note` | 5 |
+| **Note links & tags** | `link_note_to_entity`, `list_note_links`, `add_note_tag`, `remove_note_tag`, `list_note_tags` | 5 |
 | **Objectives** | `list_objectives`, `get_objective`, `create_objective`, `update_objective`, `delete_objective` | 5 |
 | **Objective links** | `list_objective_features`, `list_objective_initiatives` | 2 |
 | **Key Results** | `list_key_results`, `get_key_result`, `create_key_result`, `update_key_result`, `delete_key_result` | 5 |
@@ -34,7 +35,7 @@ This project started from [Enreign/productboard-mcp](https://github.com/Enreign/
 - **stdio only.** No HTTP transport for team-wide deployment.
 - **Build issues.** Didn't compile cleanly with its own SDK version.
 
-This rewrite uses the **official Productboard API v1**, covers **60 tools** (vs 18), and delivers it all in **~1,500 lines of Python across 4 files** with stdio and HTTP transport out of the box.
+This rewrite uses the **official Productboard API v1**, covers **60 tools** (vs 18), and delivers it all in **~1,700 lines of Python across 4 files** with stdio and HTTP transport out of the box.
 
 ## Quick Start
 
@@ -106,6 +107,15 @@ Add to your `claude_desktop_config.json`:
 
 ## Deploying as a Claude Custom Connector
 
+### With Docker
+
+```bash
+docker build -t productboard-mcp .
+docker run -p 3000:3000 -e PRODUCTBOARD_API_TOKEN=your-token productboard-mcp
+```
+
+### On any host
+
 1. Deploy with `MCP_TRANSPORT=httpStream` to any HTTPS host (Railway, Render, Fly.io, AWS, etc.)
 2. In Claude, go to **Organization Settings > Connectors**
 3. Click **"Add custom connector"**
@@ -113,6 +123,15 @@ Add to your `claude_desktop_config.json`:
 5. Click **"Add"**
 
 Team members can then connect via **Settings > Connectors > Productboard > Connect**.
+
+## Plan Restrictions
+
+Some Productboard features are only available on certain plans. If a tool accesses a feature not enabled on your workspace, it will return a clear error message instead of failing silently:
+
+- **Initiatives** — may not be available on all plans. Tools will return `"Error: Productboard API error (500): An unknown error occurred"`.
+- **Key Results** — may not be available on all plans. Tools will return `"Error: ... keyResult model was not found. It either doesn't exist or it is not enabled for your space."`.
+
+All other tools (features, products, components, notes, objectives, releases, release groups, custom fields, companies) work on all plans.
 
 ## Acknowledgments
 

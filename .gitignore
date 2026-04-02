@@ -12,3 +12,4 @@ wheels/
 # Env and OS
 .env
 .DS_Store
+.pytest_cache/

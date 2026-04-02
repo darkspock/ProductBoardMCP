@@ -1,6 +1,5 @@
 """Integration tests for note tools."""
 
-import pytest
 from tests.helpers import extract_created_id
 
 

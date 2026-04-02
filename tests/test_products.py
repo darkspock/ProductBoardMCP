@@ -1,6 +1,5 @@
 """Integration tests for product and component tools."""
 
-import pytest
 from tests.helpers import extract_created_id
 
 

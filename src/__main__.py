@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from src.server import mcp
+from src.server import mcp  # noqa: E402
 
 transport = os.getenv("MCP_TRANSPORT", "stdio")
 

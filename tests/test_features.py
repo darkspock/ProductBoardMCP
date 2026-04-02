@@ -1,7 +1,7 @@
 """Integration tests for feature tools."""
 
 import pytest
-from tests.helpers import extract_created_id, extract_uuid
+from tests.helpers import extract_created_id
 
 
 @pytest.fixture()

@@ -77,26 +77,16 @@ MCP_TRANSPORT=httpStream PORT=3000 uv run python -m src
 
 The server will listen on `http://0.0.0.0:3000/mcp`.
 
-### Connect from Claude Code (remote server)
+### Add to Claude Code (one command)
 
-Add to your `.claude/settings.json` or project settings:
-
-```json
-{
-  "mcpServers": {
-    "productboard": {
-      "url": "https://your-host.com/mcp",
-      "headers": {
-        "Authorization": "Bearer your-productboard-token"
-      }
-    }
-  }
-}
+```bash
+claude mcp add --transport http productboard "https://your-host.com/mcp" \
+  --header "Authorization: Bearer YOUR_PRODUCTBOARD_TOKEN"
 ```
 
-Each user sets their own Productboard API token. The server proxies it to the Productboard API — no tokens are stored server-side.
+Each user runs this once with their own Productboard API token. The server proxies it to the Productboard API — no tokens are stored server-side.
 
-### Connect from Claude Desktop (remote server)
+### Add to Claude Desktop
 
 Add to your `claude_desktop_config.json`:
 
@@ -106,7 +96,7 @@ Add to your `claude_desktop_config.json`:
     "productboard": {
       "url": "https://your-host.com/mcp",
       "headers": {
-        "Authorization": "Bearer your-productboard-token"
+        "Authorization": "Bearer YOUR_PRODUCTBOARD_TOKEN"
       }
     }
   }
@@ -117,20 +107,11 @@ Add to your `claude_desktop_config.json`:
 
 If you prefer running locally instead of connecting to a remote server:
 
-```json
-{
-  "mcpServers": {
-    "productboard": {
-      "command": "uv",
-      "args": ["run", "python", "-m", "src"],
-      "cwd": "/path/to/ProductBoardMCP",
-      "env": {
-        "PRODUCTBOARD_API_TOKEN": "your-token"
-      }
-    }
-  }
-}
+```bash
+claude mcp add productboard -- uv run python -m src
 ```
+
+Set `PRODUCTBOARD_API_TOKEN` in your `.env` file.
 
 ## Configuration
 

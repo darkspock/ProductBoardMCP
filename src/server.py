@@ -25,7 +25,7 @@ class TokenProxyMiddleware(Middleware):
             request = get_http_request()
             auth_header = request.headers.get("authorization", "")
             if auth_header.lower().startswith("bearer "):
-                api.set_token(auth_header[7:].strip())
+                api.set_token(auth_header[7:].strip().replace("\n", "").replace("\r", "").replace(" ", ""))
         except Exception:
             pass  # stdio mode — no HTTP request, use env var fallback
         return await call_next(context)

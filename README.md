@@ -28,8 +28,8 @@ A lightweight [MCP](https://modelcontextprotocol.io) server that gives Claude (a
 This project started from [Enreign/productboard-mcp](https://github.com/Enreign/productboard-mcp) — a solid proof of concept, but with issues that made it hard to adopt:
 
 - **Over-engineered.** 55 TypeScript files / 5,000+ lines to wrap simple REST calls. Custom ToolRegistry, ProtocolHandler, Validator, CacheModule, RateLimiter, permission discovery — abstraction layers deeper than the business logic.
-- **Wrong API.** Used a generic `/v2/entities?type[]=feature` endpoint instead of the official documented API (`/features`, `/objectives`, `/key-results`, etc.), missing most of the API surface.
-- **Low coverage.** Only 18 tools covering a fraction of the API. No initiatives, key results, components, custom fields, companies, release groups, or entity linking.
+- **Undocumented internal API.** Used `/v2/entities?type[]=feature` — an endpoint that does not appear anywhere in Productboard's [official API documentation](https://developer.productboard.com). The generic `entities` pattern with `type[]` filters is typical of an internal backend API, likely discovered by reverse engineering. This API has no versioning guarantees, no changelog, and no deprecation policy — it can break without notice. The official public API uses dedicated endpoints (`/features`, `/objectives`, `/key-results`, etc.) with proper documentation, OpenAPI spec, and stability commitments.
+- **Low coverage.** Only 18 tools covering a fraction of the API. No initiatives, key results, components, custom fields, companies, release groups, or entity linking — partly because the internal API didn't support them (key results were hardcoded as "not supported").
 - **Dead code.** Three key result tools returned early with "not supported" — the code after was unreachable.
 - **stdio only.** No HTTP transport for team-wide deployment.
 - **Build issues.** Didn't compile cleanly with its own SDK version.

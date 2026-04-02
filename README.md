@@ -2,6 +2,22 @@
 
 A lightweight [MCP](https://modelcontextprotocol.io) server that gives Claude (and any MCP client) full access to the [Productboard API v1](https://developer.productboard.com). Built with [FastMCP](https://github.com/jlowin/fastmcp).
 
+## Try it now (public test server)
+
+> **This is a shared test server for evaluation purposes only.** No tokens are stored server-side — your API token is proxied directly to Productboard. For production, deploy your own instance (see below).
+
+1. Get your Productboard API token from **Settings > Integrations > API Keys** in your workspace (`https://<your-workspace>.productboard.com/settings/integrations/api-keys`)
+
+2. Run this in Claude Code (paste the token on a **single line**, no line breaks):
+
+```bash
+claude mcp add --transport http productboard "https://productboardmcp.thebrokentelephone.com/mcp" --header "Authorization: Bearer YOUR_PRODUCTBOARD_TOKEN"
+```
+
+3. Restart Claude Code and start using the 65 Productboard tools.
+
+---
+
 ## Tools (65)
 
 | Category | Tools | Count |

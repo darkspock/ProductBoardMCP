@@ -1360,15 +1360,25 @@ async def assign_feature_to_release(
 
 
 @mcp.tool()
-async def list_custom_fields() -> str:
+async def list_custom_fields(
+    field_type: Literal["text", "number", "dropdown", "multi-dropdown", "member", "custom-description"] | None = Field(None, description="Filter by field type. If omitted, returns all types."),
+) -> str:
     """List all custom fields for hierarchy entities (features, products, components)."""
-    data = await api.get("/hierarchy-entities/custom-fields")
-    fields = data.get("data", [])
-    if not fields:
+    types_to_query = [field_type] if field_type else ["text", "number", "dropdown", "multi-dropdown", "member", "custom-description"]
+    all_fields: list = []
+    for t in types_to_query:
+        try:
+            data = await api.get("/hierarchy-entities/custom-fields", {"type": t})
+            for f in data.get("data", []):
+                f["fieldType"] = t
+                all_fields.append(f)
+        except Exception:
+            pass
+    if not all_fields:
         return "No custom fields found."
-    lines = [f"Found {len(fields)} custom fields:\n"]
-    for f in fields:
-        lines.append(f"  - {f.get('name', '?')} (ID: {f.get('id', '?')}, type: {f.get('type', '?')})")
+    lines = [f"Found {len(all_fields)} custom fields:\n"]
+    for f in all_fields:
+        lines.append(f"  - {f.get('name', '?')} (ID: {f.get('id', '?')}, type: {f.get('fieldType', '?')})")
     return "\n".join(lines)
 
 

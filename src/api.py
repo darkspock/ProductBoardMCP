@@ -24,30 +24,50 @@ def _get_client() -> httpx.AsyncClient:
     return _client
 
 
+class ProductboardAPIError(Exception):
+    """Raised when the Productboard API returns an error."""
+
+    def __init__(self, status_code: int, detail: str):
+        self.status_code = status_code
+        super().__init__(f"Productboard API error ({status_code}): {detail}")
+
+
+def _raise_on_error(r: httpx.Response) -> None:
+    if r.is_success:
+        return
+    try:
+        body = r.json()
+        errors = body.get("errors", [])
+        detail = "; ".join(e.get("detail", e.get("title", "Unknown error")) for e in errors) if errors else r.text
+    except Exception:
+        detail = r.text
+    raise ProductboardAPIError(r.status_code, detail)
+
+
 async def get(path: str, params: dict | None = None) -> dict:
     r = await _get_client().get(path, params=params)
-    r.raise_for_status()
+    _raise_on_error(r)
     return r.json()
 
 
 async def post(path: str, json: dict | None = None) -> dict:
     r = await _get_client().post(path, json=json)
-    r.raise_for_status()
+    _raise_on_error(r)
     return r.json()
 
 
 async def patch(path: str, json: dict) -> dict:
     r = await _get_client().patch(path, json=json)
-    r.raise_for_status()
+    _raise_on_error(r)
     return r.json()
 
 
 async def put(path: str, json: dict | None = None) -> dict:
     r = await _get_client().put(path, json=json)
-    r.raise_for_status()
+    _raise_on_error(r)
     return r.json()
 
 
 async def delete(path: str) -> None:
     r = await _get_client().delete(path)
-    r.raise_for_status()
+    _raise_on_error(r)

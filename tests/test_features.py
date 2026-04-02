@@ -84,14 +84,12 @@ async def test_feature_objective_linking(mcp, feature_id) -> None:  # type: igno
 
 
 async def test_feature_initiative_linking(mcp, feature_id) -> None:  # type: ignore[no-untyped-def]
-    try:
-        result = await mcp.call_tool("create_initiative", {"name": "pytest link init"})
-    except Exception as e:
-        if "500" in str(e) or "not found" in str(e).lower():
-            pytest.skip("Initiatives not enabled on this workspace")
-        raise
+    result = await mcp.call_tool("create_initiative", {"name": "pytest link init"})
+    text = result.content[0].text
+    if text.startswith("Error:"):
+        pytest.skip("Initiatives not enabled on this workspace")
 
-    init_id = extract_created_id(result.content[0].text)
+    init_id = extract_created_id(text)
     try:
         result = await mcp.call_tool("link_feature_initiative", {
             "feature_id": feature_id,

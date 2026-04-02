@@ -52,22 +52,17 @@ async def test_key_result_crud(mcp) -> None:  # type: ignore[no-untyped-def]
     })
     oid = extract_created_id(result.content[0].text)
 
-    try:
-        result = await mcp.call_tool("create_key_result", {
-            "name": "pytest kr",
-            "parent_objective_id": oid,
-            "target_value": 100,
-        })
-    except Exception as e:
-        if "not found" in str(e).lower() or "not enabled" in str(e).lower() or "bad_request" in str(e).lower():
-            pytest.skip("Key results not enabled on this workspace")
-        raise
-    finally:
-        if "created" not in (result.content[0].text if result else ""):
-            await mcp.call_tool("delete_objective", {"id": oid})
-            return
+    result = await mcp.call_tool("create_key_result", {
+        "name": "pytest kr",
+        "parent_objective_id": oid,
+        "target_value": 100,
+    })
+    text = result.content[0].text
+    if text.startswith("Error:"):
+        await mcp.call_tool("delete_objective", {"id": oid})
+        pytest.skip("Key results not enabled on this workspace")
 
-    kr_id = extract_created_id(result.content[0].text)
+    kr_id = extract_created_id(text)
     try:
         result = await mcp.call_tool("get_key_result", {"id": kr_id})
         assert "pytest kr" in result.content[0].text

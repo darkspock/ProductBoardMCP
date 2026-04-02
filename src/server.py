@@ -10,7 +10,7 @@ from pydantic import Field
 from typing import Any, Literal
 
 from src import api
-from src.helpers import strip_html, to_html
+from src.helpers import strip_html, to_html, handle_api_errors
 
 mcp = FastMCP(
     "Productboard",
@@ -52,6 +52,7 @@ async def _paginated_get(path: str, params: dict[str, Any] | None = None, max_pa
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_features(
     status_name: str | None = Field(None, description="Filter by status name (e.g. 'In Progress')"),
     status_id: str | None = Field(None, description="Filter by status UUID"),
@@ -98,6 +99,7 @@ async def list_features(
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_feature(
     id: str = Field(description="Feature UUID"),
 ) -> str:
@@ -136,6 +138,7 @@ async def get_feature(
 
 
 @mcp.tool()
+@handle_api_errors
 async def create_feature(
     name: str = Field(description="Feature name (max 255 chars)"),
     description: str = Field(description="Feature description (HTML or plain text)"),
@@ -180,6 +183,7 @@ async def create_feature(
 
 
 @mcp.tool()
+@handle_api_errors
 async def update_feature(
     id: str = Field(description="Feature UUID"),
     name: str | None = Field(None, description="New name"),
@@ -221,6 +225,7 @@ async def update_feature(
 
 
 @mcp.tool()
+@handle_api_errors
 async def delete_feature(
     id: str = Field(description="Feature UUID"),
 ) -> str:
@@ -230,6 +235,7 @@ async def delete_feature(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_feature_statuses() -> str:
     """List all available feature statuses in the workspace."""
     data = await api.get("/feature-statuses")
@@ -247,6 +253,7 @@ async def list_feature_statuses() -> str:
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_feature_objectives(
     feature_id: str = Field(description="Feature UUID"),
 ) -> str:
@@ -261,6 +268,7 @@ async def list_feature_objectives(
 
 
 @mcp.tool()
+@handle_api_errors
 async def link_feature_objective(
     feature_id: str = Field(description="Feature UUID"),
     objective_id: str = Field(description="Objective UUID"),
@@ -271,6 +279,7 @@ async def link_feature_objective(
 
 
 @mcp.tool()
+@handle_api_errors
 async def unlink_feature_objective(
     feature_id: str = Field(description="Feature UUID"),
     objective_id: str = Field(description="Objective UUID"),
@@ -281,6 +290,7 @@ async def unlink_feature_objective(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_feature_initiatives(
     feature_id: str = Field(description="Feature UUID"),
 ) -> str:
@@ -295,6 +305,7 @@ async def list_feature_initiatives(
 
 
 @mcp.tool()
+@handle_api_errors
 async def link_feature_initiative(
     feature_id: str = Field(description="Feature UUID"),
     initiative_id: str = Field(description="Initiative UUID"),
@@ -305,6 +316,7 @@ async def link_feature_initiative(
 
 
 @mcp.tool()
+@handle_api_errors
 async def unlink_feature_initiative(
     feature_id: str = Field(description="Feature UUID"),
     initiative_id: str = Field(description="Initiative UUID"),
@@ -320,6 +332,7 @@ async def unlink_feature_initiative(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_products() -> str:
     """List all products."""
     products = await _paginated_get("/products")
@@ -334,6 +347,7 @@ async def list_products() -> str:
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_product(
     id: str = Field(description="Product UUID"),
 ) -> str:
@@ -349,6 +363,7 @@ async def get_product(
 
 
 @mcp.tool()
+@handle_api_errors
 async def update_product(
     id: str = Field(description="Product UUID"),
     name: str | None = Field(None, description="New name"),
@@ -372,6 +387,7 @@ async def update_product(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_components() -> str:
     """List all components."""
     components = await _paginated_get("/components")
@@ -390,6 +406,7 @@ async def list_components() -> str:
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_component(
     id: str = Field(description="Component UUID"),
 ) -> str:
@@ -404,6 +421,7 @@ async def get_component(
 
 
 @mcp.tool()
+@handle_api_errors
 async def create_component(
     name: str = Field(description="Component name"),
     description: str = Field(description="Component description"),
@@ -432,6 +450,7 @@ async def create_component(
 
 
 @mcp.tool()
+@handle_api_errors
 async def update_component(
     id: str = Field(description="Component UUID"),
     name: str | None = Field(None, description="New name"),
@@ -455,6 +474,7 @@ async def update_component(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_notes(
     feature_id: str | None = Field(None, description="Filter by linked feature ID"),
     company_id: str | None = Field(None, description="Filter by company ID"),
@@ -506,6 +526,7 @@ async def list_notes(
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_note(
     id: str = Field(description="Note UUID"),
 ) -> str:
@@ -538,6 +559,7 @@ async def get_note(
 
 
 @mcp.tool()
+@handle_api_errors
 async def create_note(
     title: str = Field(description="Note title"),
     content: str = Field(description="Note content (HTML or plain text)"),
@@ -569,6 +591,7 @@ async def create_note(
 
 
 @mcp.tool()
+@handle_api_errors
 async def update_note(
     id: str = Field(description="Note UUID"),
     title: str | None = Field(None, description="New title"),
@@ -590,6 +613,7 @@ async def update_note(
 
 
 @mcp.tool()
+@handle_api_errors
 async def delete_note(
     id: str = Field(description="Note UUID"),
 ) -> str:
@@ -604,6 +628,7 @@ async def delete_note(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_objectives() -> str:
     """List all objectives."""
     objectives = await _paginated_get("/objectives")
@@ -634,6 +659,7 @@ async def list_objectives() -> str:
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_objective(
     id: str = Field(description="Objective UUID"),
 ) -> str:
@@ -660,6 +686,7 @@ async def get_objective(
 
 
 @mcp.tool()
+@handle_api_errors
 async def create_objective(
     name: str = Field(description="Objective name"),
     description: str | None = Field(None, description="Description (HTML or plain text)"),
@@ -695,6 +722,7 @@ async def create_objective(
 
 
 @mcp.tool()
+@handle_api_errors
 async def update_objective(
     id: str = Field(description="Objective UUID"),
     name: str | None = Field(None, description="New name"),
@@ -733,6 +761,7 @@ async def update_objective(
 
 
 @mcp.tool()
+@handle_api_errors
 async def delete_objective(
     id: str = Field(description="Objective UUID"),
 ) -> str:
@@ -745,6 +774,7 @@ async def delete_objective(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_objective_features(
     objective_id: str = Field(description="Objective UUID"),
 ) -> str:
@@ -759,6 +789,7 @@ async def list_objective_features(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_objective_initiatives(
     objective_id: str = Field(description="Objective UUID"),
 ) -> str:
@@ -778,6 +809,7 @@ async def list_objective_initiatives(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_key_results() -> str:
     """List all key results."""
     key_results = await _paginated_get("/key-results")
@@ -809,6 +841,7 @@ async def list_key_results() -> str:
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_key_result(
     id: str = Field(description="Key Result UUID"),
 ) -> str:
@@ -837,6 +870,7 @@ async def get_key_result(
 
 
 @mcp.tool()
+@handle_api_errors
 async def create_key_result(
     name: str = Field(description="Key result name"),
     parent_objective_id: str = Field(description="Parent objective UUID"),
@@ -881,6 +915,7 @@ async def create_key_result(
 
 
 @mcp.tool()
+@handle_api_errors
 async def update_key_result(
     id: str = Field(description="Key Result UUID"),
     name: str | None = Field(None, description="New name"),
@@ -917,6 +952,7 @@ async def update_key_result(
 
 
 @mcp.tool()
+@handle_api_errors
 async def delete_key_result(
     id: str = Field(description="Key Result UUID"),
 ) -> str:
@@ -931,6 +967,7 @@ async def delete_key_result(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_initiatives() -> str:
     """List all initiatives."""
     initiatives = await _paginated_get("/initiatives")
@@ -956,6 +993,7 @@ async def list_initiatives() -> str:
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_initiative(
     id: str = Field(description="Initiative UUID"),
 ) -> str:
@@ -981,6 +1019,7 @@ async def get_initiative(
 
 
 @mcp.tool()
+@handle_api_errors
 async def create_initiative(
     name: str = Field(description="Initiative name"),
     description: str | None = Field(None, description="Description"),
@@ -1013,6 +1052,7 @@ async def create_initiative(
 
 
 @mcp.tool()
+@handle_api_errors
 async def update_initiative(
     id: str = Field(description="Initiative UUID"),
     name: str | None = Field(None, description="New name"),
@@ -1051,6 +1091,7 @@ async def update_initiative(
 
 
 @mcp.tool()
+@handle_api_errors
 async def delete_initiative(
     id: str = Field(description="Initiative UUID"),
 ) -> str:
@@ -1063,6 +1104,7 @@ async def delete_initiative(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_initiative_features(
     initiative_id: str = Field(description="Initiative UUID"),
 ) -> str:
@@ -1077,6 +1119,7 @@ async def list_initiative_features(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_initiative_objectives(
     initiative_id: str = Field(description="Initiative UUID"),
 ) -> str:
@@ -1096,6 +1139,7 @@ async def list_initiative_objectives(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_releases(
     release_group_id: str | None = Field(None, description="Filter by release group UUID"),
 ) -> str:
@@ -1129,6 +1173,7 @@ async def list_releases(
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_release(
     id: str = Field(description="Release UUID"),
 ) -> str:
@@ -1154,6 +1199,7 @@ async def get_release(
 
 
 @mcp.tool()
+@handle_api_errors
 async def create_release(
     name: str = Field(description="Release name"),
     description: str = Field(description="Release description"),
@@ -1185,6 +1231,7 @@ async def create_release(
 
 
 @mcp.tool()
+@handle_api_errors
 async def update_release(
     id: str = Field(description="Release UUID"),
     name: str | None = Field(None, description="New name"),
@@ -1217,6 +1264,7 @@ async def update_release(
 
 
 @mcp.tool()
+@handle_api_errors
 async def delete_release(
     id: str = Field(description="Release UUID"),
 ) -> str:
@@ -1231,6 +1279,7 @@ async def delete_release(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_release_groups() -> str:
     """List all release groups."""
     groups = await _paginated_get("/release-groups")
@@ -1245,6 +1294,7 @@ async def list_release_groups() -> str:
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_release_group(
     id: str = Field(description="Release Group UUID"),
 ) -> str:
@@ -1260,6 +1310,7 @@ async def get_release_group(
 
 
 @mcp.tool()
+@handle_api_errors
 async def create_release_group(
     name: str = Field(description="Release group name"),
     description: str = Field(description="Release group description"),
@@ -1272,6 +1323,7 @@ async def create_release_group(
 
 
 @mcp.tool()
+@handle_api_errors
 async def update_release_group(
     id: str = Field(description="Release Group UUID"),
     name: str | None = Field(None, description="New name"),
@@ -1293,6 +1345,7 @@ async def update_release_group(
 
 
 @mcp.tool()
+@handle_api_errors
 async def delete_release_group(
     id: str = Field(description="Release Group UUID"),
 ) -> str:
@@ -1307,6 +1360,7 @@ async def delete_release_group(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_feature_release_assignments(
     feature_id: str | None = Field(None, description="Filter by feature UUID"),
     release_id: str | None = Field(None, description="Filter by release UUID"),
@@ -1338,6 +1392,7 @@ async def list_feature_release_assignments(
 
 
 @mcp.tool()
+@handle_api_errors
 async def assign_feature_to_release(
     feature_id: str = Field(description="Feature UUID"),
     release_id: str = Field(description="Release UUID"),
@@ -1358,6 +1413,7 @@ async def assign_feature_to_release(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_custom_fields(
     field_type: Literal["text", "number", "dropdown", "multi-dropdown", "member", "custom-description"] | None = Field(None, description="Filter by field type. If omitted, returns all types."),
 ) -> str:
@@ -1381,6 +1437,7 @@ async def list_custom_fields(
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_custom_field_value(
     custom_field_id: str = Field(description="Custom field UUID"),
     entity_id: str = Field(description="Hierarchy entity UUID (feature, product, or component)"),
@@ -1393,6 +1450,7 @@ async def get_custom_field_value(
 
 
 @mcp.tool()
+@handle_api_errors
 async def set_custom_field_value(
     custom_field_id: str = Field(description="Custom field UUID"),
     entity_id: str = Field(description="Hierarchy entity UUID (feature, product, or component)"),
@@ -1421,6 +1479,7 @@ async def set_custom_field_value(
 
 
 @mcp.tool()
+@handle_api_errors
 async def list_companies(
     term: str | None = Field(None, description="Search term"),
     has_notes: bool | None = Field(None, description="Filter companies with notes"),
@@ -1448,6 +1507,7 @@ async def list_companies(
 
 
 @mcp.tool()
+@handle_api_errors
 async def get_company(
     id: str = Field(description="Company UUID"),
 ) -> str:

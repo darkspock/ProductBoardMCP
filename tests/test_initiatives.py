@@ -8,18 +8,16 @@ from tests.helpers import extract_created_id
 
 
 async def test_initiative_crud(mcp) -> None:  # type: ignore[no-untyped-def]
-    try:
-        result = await mcp.call_tool("create_initiative", {
-            "name": "pytest initiative",
-            "description": "test",
-        })
-    except Exception as e:
-        if "500" in str(e) or "not found" in str(e).lower():
-            pytest.skip("Initiatives not enabled on this workspace")
-        raise
+    result = await mcp.call_tool("create_initiative", {
+        "name": "pytest initiative",
+        "description": "test",
+    })
+    text = result.content[0].text
+    if text.startswith("Error:"):
+        pytest.skip("Initiatives not enabled on this workspace")
 
-    assert "created" in result.content[0].text.lower()
-    iid = extract_created_id(result.content[0].text)
+    assert "created" in text.lower()
+    iid = extract_created_id(text)
 
     try:
         result = await mcp.call_tool("get_initiative", {"id": iid})

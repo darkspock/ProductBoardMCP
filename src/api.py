@@ -1,9 +1,9 @@
-"""Thin async HTTP client for Productboard API v2."""
+"""Thin async HTTP client for Productboard API v1."""
 
 import os
 import httpx
 
-API_BASE = os.getenv("PRODUCTBOARD_API_BASE_URL", "https://api.productboard.com/v2")
+API_BASE = os.getenv("PRODUCTBOARD_API_BASE_URL", "https://api.productboard.com")
 API_TOKEN = os.getenv("PRODUCTBOARD_API_TOKEN", "")
 
 _client: httpx.AsyncClient | None = None
@@ -30,7 +30,7 @@ async def get(path: str, params: dict | None = None) -> dict:
     return r.json()
 
 
-async def post(path: str, json: dict) -> dict:
+async def post(path: str, json: dict | None = None) -> dict:
     r = await _get_client().post(path, json=json)
     r.raise_for_status()
     return r.json()
@@ -38,6 +38,12 @@ async def post(path: str, json: dict) -> dict:
 
 async def patch(path: str, json: dict) -> dict:
     r = await _get_client().patch(path, json=json)
+    r.raise_for_status()
+    return r.json()
+
+
+async def put(path: str, json: dict | None = None) -> dict:
+    r = await _get_client().put(path, json=json)
     r.raise_for_status()
     return r.json()
 

@@ -1,34 +1,40 @@
 # Productboard MCP Server
 
-A lightweight [MCP](https://modelcontextprotocol.io) server that gives Claude (and any MCP client) access to the Productboard API. Built with [FastMCP](https://github.com/jlowin/fastmcp).
+A lightweight [MCP](https://modelcontextprotocol.io) server that gives Claude (and any MCP client) full access to the [Productboard API v1](https://developer.productboard.com). Built with [FastMCP](https://github.com/jlowin/fastmcp).
 
-## Features
+## Tools (60)
 
-18 tools covering the full Productboard API v2:
-
-| Category | Tools |
-|----------|-------|
-| **Features** | `list_features`, `get_feature`, `create_feature`, `update_feature`, `delete_feature` |
-| **Products** | `list_products`, `create_product`, `product_hierarchy` |
-| **Notes** | `create_note`, `list_notes` |
-| **Objectives** | `list_objectives`, `create_objective`, `update_objective` |
-| **Releases** | `list_releases`, `create_release`, `update_release`, `release_timeline`, `release_status_update` |
+| Category | Tools | Count |
+|----------|-------|-------|
+| **Features** | `list_features`, `get_feature`, `create_feature`, `update_feature`, `delete_feature` | 5 |
+| **Feature links** | `list_feature_objectives`, `link_feature_objective`, `unlink_feature_objective`, `list_feature_initiatives`, `link_feature_initiative`, `unlink_feature_initiative` | 6 |
+| **Feature statuses** | `list_feature_statuses` | 1 |
+| **Products** | `list_products`, `get_product`, `update_product` | 3 |
+| **Components** | `list_components`, `get_component`, `create_component`, `update_component` | 4 |
+| **Notes** | `list_notes`, `get_note`, `create_note`, `update_note`, `delete_note` | 5 |
+| **Objectives** | `list_objectives`, `get_objective`, `create_objective`, `update_objective`, `delete_objective` | 5 |
+| **Objective links** | `list_objective_features`, `list_objective_initiatives` | 2 |
+| **Key Results** | `list_key_results`, `get_key_result`, `create_key_result`, `update_key_result`, `delete_key_result` | 5 |
+| **Initiatives** | `list_initiatives`, `get_initiative`, `create_initiative`, `update_initiative`, `delete_initiative` | 5 |
+| **Initiative links** | `list_initiative_features`, `list_initiative_objectives` | 2 |
+| **Releases** | `list_releases`, `get_release`, `create_release`, `update_release`, `delete_release` | 5 |
+| **Release Groups** | `list_release_groups`, `get_release_group`, `create_release_group`, `update_release_group`, `delete_release_group` | 5 |
+| **Feature-Release Assignments** | `list_feature_release_assignments`, `assign_feature_to_release` | 2 |
+| **Custom Fields** | `list_custom_fields`, `get_custom_field_value`, `set_custom_field_value` | 3 |
+| **Companies** | `list_companies`, `get_company` | 2 |
 
 ## Why a Rewrite?
 
-This project exists because the original [Enreign/productboard-mcp](https://github.com/Enreign/productboard-mcp) — while a solid proof of concept — has several issues that make it hard to adopt, deploy, and maintain:
+This project started from [Enreign/productboard-mcp](https://github.com/Enreign/productboard-mcp) — a solid proof of concept, but with issues that made it hard to adopt:
 
-- **Heavily over-engineered for what it does.** 55 TypeScript files and 5,000+ lines of code to wrap 18 simple REST calls. Custom ToolRegistry, ProtocolHandler, Validator, CacheModule, RateLimiter, permission discovery system, multi-layer error hierarchy — all for endpoints that are essentially `GET /entities?type[]=feature`. The abstraction layers are deeper than the actual business logic.
+- **Over-engineered.** 55 TypeScript files / 5,000+ lines to wrap simple REST calls. Custom ToolRegistry, ProtocolHandler, Validator, CacheModule, RateLimiter, permission discovery — abstraction layers deeper than the business logic.
+- **Wrong API.** Used a generic `/v2/entities?type[]=feature` endpoint instead of the official documented API (`/features`, `/objectives`, `/key-results`, etc.), missing most of the API surface.
+- **Low coverage.** Only 18 tools covering a fraction of the API. No initiatives, key results, components, custom fields, companies, release groups, or entity linking.
+- **Dead code.** Three key result tools returned early with "not supported" — the code after was unreachable.
+- **stdio only.** No HTTP transport for team-wide deployment.
+- **Build issues.** Didn't compile cleanly with its own SDK version.
 
-- **Dead code.** Three key result tools (`pb_keyresult_list`, `pb_keyresult_create`, `pb_keyresult_update`) return early with a hardcoded "not supported" message. The code after the early return is unreachable but ships anyway.
-
-- **stdio only — no remote transport.** The original only supports `StdioServerTransport`, which means every user must clone the repo, install Node.js dependencies, and configure their own API token locally. There's no HTTP transport for team-wide deployment as a Claude custom connector.
-
-- **Build issues.** The project doesn't compile cleanly with its own SDK version (`@modelcontextprotocol/sdk@1.27.1`) due to type mismatches in the `CallToolRequestSchema` handler. The build relies on `skipLibCheck: true` and a post-build `fix-imports.js` script to patch module paths.
-
-- **Not an official SDK.** Despite the name and packaging, this is not affiliated with Productboard. It's a community project. Since all it does is call a public REST API, there's no reason to inherit its complexity.
-
-This rewrite keeps the same 18 functional tools and the same Productboard API patterns, but delivers them in ~570 lines of Python across 4 files, with stdio and HTTP transport working out of the box.
+This rewrite uses the **official Productboard API v1**, covers **60 tools** (vs 18), and delivers it all in **~1,500 lines of Python across 4 files** with stdio and HTTP transport out of the box.
 
 ## Quick Start
 
@@ -96,7 +102,7 @@ Add to your `claude_desktop_config.json`:
 | `PRODUCTBOARD_API_TOKEN` | Yes | — | Bearer token from Productboard |
 | `MCP_TRANSPORT` | No | `stdio` | `stdio` or `httpStream` |
 | `PORT` | No | `3000` | HTTP port (only in httpStream mode) |
-| `PRODUCTBOARD_API_BASE_URL` | No | `https://api.productboard.com/v2` | API base URL |
+| `PRODUCTBOARD_API_BASE_URL` | No | `https://api.productboard.com` | API base URL |
 
 ## Deploying as a Claude Custom Connector
 
@@ -110,7 +116,7 @@ Team members can then connect via **Settings > Connectors > Productboard > Conne
 
 ## Acknowledgments
 
-This project is a Python/FastMCP rewrite of [Enreign/productboard-mcp](https://github.com/Enreign/productboard-mcp) by [Stanislav Shymanskyi](https://github.com/Enreign). The original TypeScript implementation (MIT License, v0.2.1) provided the foundation for all tool definitions and Productboard API integration patterns used here. Thank you for the excellent work!
+This project is inspired by [Enreign/productboard-mcp](https://github.com/Enreign/productboard-mcp) by [Stanislav Shymanskyi](https://github.com/Enreign). The original TypeScript implementation (MIT License, v0.2.1) demonstrated that an MCP server for Productboard was viable and provided the initial inspiration. Thank you for paving the way!
 
 ## License
 

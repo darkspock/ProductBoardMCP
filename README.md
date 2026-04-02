@@ -14,6 +14,22 @@ A lightweight [MCP](https://modelcontextprotocol.io) server that gives Claude (a
 | **Objectives** | `list_objectives`, `create_objective`, `update_objective` |
 | **Releases** | `list_releases`, `create_release`, `update_release`, `release_timeline`, `release_status_update` |
 
+## Why a Rewrite?
+
+This project exists because the original [Enreign/productboard-mcp](https://github.com/Enreign/productboard-mcp) — while a solid proof of concept — has several issues that make it hard to adopt, deploy, and maintain:
+
+- **Heavily over-engineered for what it does.** 55 TypeScript files and 5,000+ lines of code to wrap 18 simple REST calls. Custom ToolRegistry, ProtocolHandler, Validator, CacheModule, RateLimiter, permission discovery system, multi-layer error hierarchy — all for endpoints that are essentially `GET /entities?type[]=feature`. The abstraction layers are deeper than the actual business logic.
+
+- **Dead code.** Three key result tools (`pb_keyresult_list`, `pb_keyresult_create`, `pb_keyresult_update`) return early with a hardcoded "not supported" message. The code after the early return is unreachable but ships anyway.
+
+- **stdio only — no remote transport.** The original only supports `StdioServerTransport`, which means every user must clone the repo, install Node.js dependencies, and configure their own API token locally. There's no HTTP transport for team-wide deployment as a Claude custom connector.
+
+- **Build issues.** The project doesn't compile cleanly with its own SDK version (`@modelcontextprotocol/sdk@1.27.1`) due to type mismatches in the `CallToolRequestSchema` handler. The build relies on `skipLibCheck: true` and a post-build `fix-imports.js` script to patch module paths.
+
+- **Not an official SDK.** Despite the name and packaging, this is not affiliated with Productboard. It's a community project. Since all it does is call a public REST API, there's no reason to inherit its complexity.
+
+This rewrite keeps the same 18 functional tools and the same Productboard API patterns, but delivers them in ~570 lines of Python across 4 files, with stdio and HTTP transport working out of the box.
+
 ## Quick Start
 
 ### Prerequisites

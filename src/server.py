@@ -6,11 +6,30 @@ initiatives, releases, release groups, custom fields, and companies.
 """
 
 from fastmcp import FastMCP
+from fastmcp.server.middleware import Middleware, MiddlewareContext, CallNext
+from fastmcp.server.dependencies import get_http_request
 from pydantic import Field
 from typing import Any, Literal
 
 from src import api
 from src.helpers import strip_html, to_html, handle_api_errors
+
+
+class TokenProxyMiddleware(Middleware):
+    """Extract Productboard token from the incoming HTTP Authorization header
+    and set it for the current request context. This lets each user pass
+    their own token without the server storing any credentials."""
+
+    async def on_call_tool(self, context: MiddlewareContext[Any], call_next: CallNext[Any, Any]) -> Any:
+        try:
+            request = get_http_request()
+            auth_header = request.headers.get("authorization", "")
+            if auth_header.lower().startswith("bearer "):
+                api.set_token(auth_header[7:].strip())
+        except Exception:
+            pass  # stdio mode — no HTTP request, use env var fallback
+        return await call_next(context)
+
 
 mcp = FastMCP(
     "Productboard",
@@ -20,6 +39,7 @@ mcp = FastMCP(
         "custom fields, and companies."
     ),
 )
+mcp.add_middleware(TokenProxyMiddleware())
 
 
 # ───────────────────────────────────────────────────────────────────────────

@@ -77,9 +77,45 @@ MCP_TRANSPORT=httpStream PORT=3000 uv run python -m src
 
 The server will listen on `http://0.0.0.0:3000/mcp`.
 
-### Claude Desktop Configuration
+### Connect from Claude Code (remote server)
+
+Add to your `.claude/settings.json` or project settings:
+
+```json
+{
+  "mcpServers": {
+    "productboard": {
+      "url": "https://your-host.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-productboard-token"
+      }
+    }
+  }
+}
+```
+
+Each user sets their own Productboard API token. The server proxies it to the Productboard API — no tokens are stored server-side.
+
+### Connect from Claude Desktop (remote server)
 
 Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "productboard": {
+      "url": "https://your-host.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-productboard-token"
+      }
+    }
+  }
+}
+```
+
+### Local mode (stdio)
+
+If you prefer running locally instead of connecting to a remote server:
 
 ```json
 {
@@ -111,8 +147,10 @@ Add to your `claude_desktop_config.json`:
 
 ```bash
 docker build -t productboard-mcp .
-docker run -p 3000:3000 -e PRODUCTBOARD_API_TOKEN=your-token productboard-mcp
+docker run -p 3000:3000 productboard-mcp
 ```
+
+No API token needed on the server — each user passes their own token via the `Authorization` header from their Claude config.
 
 ### On any host
 

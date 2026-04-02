@@ -1,31 +1,32 @@
-"""Thin async HTTP client for Productboard API v1 with retry on 429."""
+"""Thin async HTTP client for Productboard API v1 with retry on 429.
+
+In HTTP mode, the user's token is read from the Authorization header
+of each incoming MCP request (proxy mode). In stdio mode, it falls
+back to the PRODUCTBOARD_API_TOKEN env var.
+"""
 
 from typing import Any
+from contextvars import ContextVar
 
 import asyncio
 import os
 import httpx
 
 API_BASE = os.getenv("PRODUCTBOARD_API_BASE_URL", "https://api.productboard.com")
-API_TOKEN = os.getenv("PRODUCTBOARD_API_TOKEN", "")
 MAX_RETRIES = 3
 
-_client: httpx.AsyncClient | None = None
+# Per-request token set by middleware, falls back to env var
+_request_token: ContextVar[str] = ContextVar("_request_token", default="")
 
 
-def _get_client() -> httpx.AsyncClient:
-    global _client
-    if _client is None or _client.is_closed:
-        _client = httpx.AsyncClient(
-            base_url=API_BASE,
-            headers={
-                "Authorization": f"Bearer {API_TOKEN}",
-                "Content-Type": "application/json",
-                "X-Version": "1",
-            },
-            timeout=30.0,
-        )
-    return _client
+def get_token() -> str:
+    """Get the Productboard token for the current request."""
+    return _request_token.get() or os.getenv("PRODUCTBOARD_API_TOKEN", "")
+
+
+def set_token(token: str) -> None:
+    """Set the Productboard token for the current request context."""
+    _request_token.set(token)
 
 
 class ProductboardAPIError(Exception):
@@ -49,18 +50,30 @@ def _raise_on_error(r: httpx.Response) -> None:
 
 
 async def _request(method: str, path: str, **kwargs: Any) -> httpx.Response:
-    """Execute request with retry on 429 (rate limit)."""
-    r: httpx.Response | None = None
-    for attempt in range(MAX_RETRIES):
-        client = _get_client()
-        call = getattr(client, method)
-        r = await call(path, **kwargs)
-        if r.status_code != 429:
-            return r
-        retry_after = int(r.headers.get("Retry-After", str(2 ** attempt)))
-        await asyncio.sleep(retry_after)
-    assert r is not None
-    return r
+    """Execute request with per-request token and retry on 429."""
+    token = get_token()
+    if not token:
+        raise ProductboardAPIError(401, "No Productboard API token provided. Set Authorization header or PRODUCTBOARD_API_TOKEN env var.")
+
+    async with httpx.AsyncClient(
+        base_url=API_BASE,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "X-Version": "1",
+        },
+        timeout=30.0,
+    ) as client:
+        r: httpx.Response | None = None
+        for attempt in range(MAX_RETRIES):
+            call = getattr(client, method)
+            r = await call(path, **kwargs)
+            if r.status_code != 429:
+                return r
+            retry_after = int(r.headers.get("Retry-After", str(2 ** attempt)))
+            await asyncio.sleep(retry_after)
+        assert r is not None
+        return r
 
 
 async def get(path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:

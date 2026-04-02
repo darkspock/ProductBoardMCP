@@ -43,7 +43,7 @@ This rewrite uses the **official Productboard API v1**, covers **60 tools** (vs 
 
 - Python 3.13+
 - [uv](https://github.com/astral-sh/uv) (recommended) or pip
-- A Productboard API token (Settings > Integrations in Productboard)
+- A Productboard API token — generate one at **Settings > Integrations > API Keys** in your Productboard workspace (`https://<your-workspace>.productboard.com/settings/integrations/api-keys`)
 
 ### Install
 
@@ -85,6 +85,13 @@ claude mcp add --transport http productboard "https://your-host.com/mcp" \
 ```
 
 Each user runs this once with their own Productboard API token. The server proxies it to the Productboard API — no tokens are stored server-side.
+
+> **Important:** The token and the entire `--header` value must be on a **single line** with no line breaks or extra spaces. Productboard API tokens are long JWTs — when copying from a terminal or password manager, line breaks are often introduced silently. If `claude mcp list` shows `Failed to connect`, remove and re-add the server with the token on one line:
+>
+> ```bash
+> claude mcp remove productboard
+> claude mcp add --transport http productboard "https://your-host.com/mcp" --header "Authorization: Bearer eyJ0eXAi...full_token_here"
+> ```
 
 ### Add to Claude Desktop
 

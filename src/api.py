@@ -1,5 +1,7 @@
 """Thin async HTTP client for Productboard API v1."""
 
+from typing import Any
+
 import os
 import httpx
 
@@ -27,7 +29,7 @@ def _get_client() -> httpx.AsyncClient:
 class ProductboardAPIError(Exception):
     """Raised when the Productboard API returns an error."""
 
-    def __init__(self, status_code: int, detail: str):
+    def __init__(self, status_code: int, detail: str) -> None:
         self.status_code = status_code
         super().__init__(f"Productboard API error ({status_code}): {detail}")
 
@@ -44,28 +46,34 @@ def _raise_on_error(r: httpx.Response) -> None:
     raise ProductboardAPIError(r.status_code, detail)
 
 
-async def get(path: str, params: dict | None = None) -> dict:
+async def get(path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
     r = await _get_client().get(path, params=params)
     _raise_on_error(r)
-    return r.json()
+    result: dict[str, Any] = r.json()
+    return result
 
 
-async def post(path: str, json: dict | None = None) -> dict:
+async def post(path: str, json: dict[str, Any] | None = None) -> dict[str, Any]:
     r = await _get_client().post(path, json=json)
     _raise_on_error(r)
-    return r.json() if r.content else {}
+    if not r.content:
+        return {}
+    result: dict[str, Any] = r.json()
+    return result
 
 
-async def patch(path: str, json: dict) -> dict:
+async def patch(path: str, json: dict[str, Any]) -> dict[str, Any]:
     r = await _get_client().patch(path, json=json)
     _raise_on_error(r)
-    return r.json()
+    result: dict[str, Any] = r.json()
+    return result
 
 
-async def put(path: str, json: dict | None = None) -> dict:
+async def put(path: str, json: dict[str, Any] | None = None) -> dict[str, Any]:
     r = await _get_client().put(path, json=json)
     _raise_on_error(r)
-    return r.json()
+    result: dict[str, Any] = r.json()
+    return result
 
 
 async def delete(path: str) -> None:

@@ -7,7 +7,7 @@ initiatives, releases, release groups, custom fields, and companies.
 
 from fastmcp import FastMCP
 from pydantic import Field
-from typing import Literal
+from typing import Any, Literal
 
 from src import api
 from src.helpers import strip_html, to_html
@@ -27,11 +27,11 @@ mcp = FastMCP(
 # ───────────────────────────────────────────────────────────────────────────
 
 
-async def _paginated_get(path: str, params: dict | None = None, max_pages: int = 5) -> list:
+async def _paginated_get(path: str, params: dict[str, Any] | None = None, max_pages: int = 5) -> list[dict[str, Any]]:
     """Fetch paginated results, following pageCursor links."""
     params = dict(params or {})
     params.setdefault("pageLimit", 100)
-    all_items: list = []
+    all_items: list[dict[str, Any]] = []
     for _ in range(max_pages):
         data = await api.get(path, params)
         all_items.extend(data.get("data", []))
@@ -60,7 +60,7 @@ async def list_features(
     archived: bool | None = Field(None, description="Filter by archived flag"),
 ) -> str:
     """List Productboard features with optional filtering."""
-    params: dict = {}
+    params: dict[str, Any] = {}
     if status_name:
         params["status.name"] = status_name
     if status_id:
@@ -148,7 +148,7 @@ async def create_feature(
     owner_email: str | None = Field(None, description="Owner email"),
 ) -> str:
     """Create a new feature in Productboard."""
-    body: dict = {
+    body: dict[str, Any] = {
         "data": {
             "name": name,
             "description": to_html(description),
@@ -193,7 +193,7 @@ async def update_feature(
     parent_feature_id: str | None = Field(None, description="Move under feature"),
 ) -> str:
     """Update an existing feature."""
-    body: dict = {"data": {}}
+    body: dict[str, Any] = {"data": {}}
     if name:
         body["data"]["name"] = name
     if description:
@@ -355,7 +355,7 @@ async def update_product(
     description: str | None = Field(None, description="New description"),
 ) -> str:
     """Update a product."""
-    body: dict = {"data": {}}
+    body: dict[str, Any] = {"data": {}}
     if name:
         body["data"]["name"] = name
     if description:
@@ -412,7 +412,7 @@ async def create_component(
     owner_email: str | None = Field(None, description="Owner email"),
 ) -> str:
     """Create a new component."""
-    body: dict = {
+    body: dict[str, Any] = {
         "data": {
             "name": name,
             "description": to_html(description),
@@ -438,7 +438,7 @@ async def update_component(
     description: str | None = Field(None, description="New description"),
 ) -> str:
     """Update a component."""
-    body: dict = {"data": {}}
+    body: dict[str, Any] = {"data": {}}
     if name:
         body["data"]["name"] = name
     if description:
@@ -466,7 +466,7 @@ async def list_notes(
     created_to: str | None = Field(None, description="Notes created before (ISO date)"),
 ) -> str:
     """List customer feedback notes with filters."""
-    params: dict = {}
+    params: dict[str, Any] = {}
     if feature_id:
         params["featureId"] = feature_id
     if company_id:
@@ -548,7 +548,7 @@ async def create_note(
     tags: list[str] | None = Field(None, description="Tags to add"),
 ) -> str:
     """Create a customer feedback note."""
-    body: dict = {
+    body: dict[str, Any] = {
         "title": title,
         "content": to_html(content),
     }
@@ -576,7 +576,7 @@ async def update_note(
     tags: list[str] | None = Field(None, description="Replace all tags"),
 ) -> str:
     """Update an existing note."""
-    data: dict = {}
+    data: dict[str, Any] = {}
     if title:
         data["title"] = title
     if content:
@@ -671,7 +671,7 @@ async def create_objective(
     parent_objective_id: str | None = Field(None, description="Parent objective UUID (for sub-objectives)"),
 ) -> str:
     """Create a new objective."""
-    body: dict = {"data": {"name": name}}
+    body: dict[str, Any] = {"data": {"name": name}}
     if description:
         body["data"]["description"] = to_html(description)
     if owner_email:
@@ -707,7 +707,7 @@ async def update_objective(
     end_date: str | None = Field(None, description="End date"),
 ) -> str:
     """Update an existing objective."""
-    body: dict = {"data": {}}
+    body: dict[str, Any] = {"data": {}}
     if name:
         body["data"]["name"] = name
     if description:
@@ -849,7 +849,7 @@ async def create_key_result(
     end_date: str | None = Field(None, description="End date (YYYY-MM-DD)"),
 ) -> str:
     """Create a key result for an objective."""
-    body: dict = {
+    body: dict[str, Any] = {
         "data": {
             "name": name,
             "parent": {"objective": {"id": parent_objective_id}},
@@ -859,7 +859,7 @@ async def create_key_result(
         body["data"]["description"] = to_html(description)
     if owner_email:
         body["data"]["owner"] = {"email": owner_email}
-    progress: dict = {}
+    progress: dict[str, Any] = {}
     if start_value is not None:
         progress["startValue"] = start_value
     if target_value is not None:
@@ -892,7 +892,7 @@ async def update_key_result(
     archived: bool | None = Field(None, description="Archive flag"),
 ) -> str:
     """Update a key result."""
-    body: dict = {"data": {}}
+    body: dict[str, Any] = {"data": {}}
     if name:
         body["data"]["name"] = name
     if description:
@@ -901,7 +901,7 @@ async def update_key_result(
         body["data"]["owner"] = {"email": owner_email}
     if archived is not None:
         body["data"]["archived"] = archived
-    progress: dict = {}
+    progress: dict[str, Any] = {}
     if start_value is not None:
         progress["startValue"] = start_value
     if target_value is not None:
@@ -991,7 +991,7 @@ async def create_initiative(
     end_date: str | None = Field(None, description="End date (YYYY-MM-DD)"),
 ) -> str:
     """Create a new initiative."""
-    body: dict = {"data": {"name": name}}
+    body: dict[str, Any] = {"data": {"name": name}}
     if description:
         body["data"]["description"] = to_html(description)
     if owner_email:
@@ -1025,7 +1025,7 @@ async def update_initiative(
     end_date: str | None = Field(None, description="End date"),
 ) -> str:
     """Update an existing initiative."""
-    body: dict = {"data": {}}
+    body: dict[str, Any] = {"data": {}}
     if name:
         body["data"]["name"] = name
     if description:
@@ -1100,7 +1100,7 @@ async def list_releases(
     release_group_id: str | None = Field(None, description="Filter by release group UUID"),
 ) -> str:
     """List releases."""
-    params: dict = {}
+    params: dict[str, Any] = {}
     if release_group_id:
         params["releaseGroup.id"] = release_group_id
 
@@ -1163,7 +1163,7 @@ async def create_release(
     end_date: str | None = Field(None, description="End date (YYYY-MM-DD)"),
 ) -> str:
     """Create a new release."""
-    body: dict = {
+    body: dict[str, Any] = {
         "data": {
             "name": name,
             "description": to_html(description),
@@ -1195,7 +1195,7 @@ async def update_release(
     end_date: str | None = Field(None, description="End date"),
 ) -> str:
     """Update a release."""
-    body: dict = {"data": {}}
+    body: dict[str, Any] = {"data": {}}
     if name:
         body["data"]["name"] = name
     if description:
@@ -1279,7 +1279,7 @@ async def update_release_group(
     archived: bool | None = Field(None, description="Archive flag"),
 ) -> str:
     """Update a release group."""
-    body: dict = {"data": {}}
+    body: dict[str, Any] = {"data": {}}
     if name:
         body["data"]["name"] = name
     if description:
@@ -1313,7 +1313,7 @@ async def list_feature_release_assignments(
     release_state: Literal["upcoming", "completed"] | None = Field(None, description="Filter by release state"),
 ) -> str:
     """List feature-release assignments."""
-    params: dict = {}
+    params: dict[str, Any] = {}
     if feature_id:
         params["feature.id"] = feature_id
     if release_id:
@@ -1363,7 +1363,7 @@ async def list_custom_fields(
 ) -> str:
     """List all custom fields for hierarchy entities (features, products, components)."""
     types_to_query = [field_type] if field_type else ["text", "number", "dropdown", "multi-dropdown", "member", "custom-description"]
-    all_fields: list = []
+    all_fields: list[dict[str, Any]] = []
     for t in types_to_query:
         try:
             data = await api.get("/hierarchy-entities/custom-fields", {"type": t})
@@ -1427,7 +1427,7 @@ async def list_companies(
     feature_id: str | None = Field(None, description="Filter by associated feature"),
 ) -> str:
     """List companies (customers) in Productboard."""
-    params: dict = {}
+    params: dict[str, Any] = {}
     if term:
         params["term"] = term
     if has_notes is not None:

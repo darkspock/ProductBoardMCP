@@ -107,17 +107,17 @@ async def get_feature(
     name = f.get("name", "Untitled")
     desc = f.get("description", "")
     status = f.get("status", {})
-    owner = f.get("owner", {})
-    parent = f.get("parent", {})
-    timeframe = f.get("timeframe", {})
-    links = f.get("links", {})
+    owner = f.get("owner") or {}
+    parent = f.get("parent") or {}
+    timeframe = f.get("timeframe") or {}
+    links = f.get("links") or {}
 
     lines = [
         f"Feature: {name}",
         f"ID: {f.get('id', id)}",
         f"Type: {f.get('type', 'feature')}",
         f"Status: {status.get('name', 'Unknown')} (ID: {status.get('id', 'N/A')})",
-        f"Owner: {owner.get('email', 'Unassigned')}",
+        f"Owner: {owner.get('email', 'Unassigned') if isinstance(owner, dict) else 'Unassigned'}",
         f"Archived: {f.get('archived', False)}",
     ]
     if parent:
@@ -549,21 +549,19 @@ async def create_note(
 ) -> str:
     """Create a customer feedback note."""
     body: dict = {
-        "data": {
-            "title": title,
-            "content": to_html(content),
-        }
+        "title": title,
+        "content": to_html(content),
     }
     if owner_email:
-        body["data"]["owner"] = {"email": owner_email}
+        body["owner"] = {"email": owner_email}
     if company_domain:
-        body["data"]["company"] = {"domain": company_domain}
+        body["company"] = {"domain": company_domain}
     if user_email:
-        body["data"]["user"] = {"email": user_email}
+        body["user"] = {"email": user_email}
     if source_system:
-        body["data"]["source"] = {"system": source_system}
+        body["source"] = {"system": source_system}
     if tags:
-        body["data"]["tags"] = tags
+        body["tags"] = tags
 
     data = await api.post("/notes", body)
     nid = data.get("data", {}).get("id", "unknown")
@@ -578,16 +576,16 @@ async def update_note(
     tags: list[str] | None = Field(None, description="Replace all tags"),
 ) -> str:
     """Update an existing note."""
-    body: dict = {"data": {}}
+    data: dict = {}
     if title:
-        body["data"]["title"] = title
+        data["title"] = title
     if content:
-        body["data"]["content"] = to_html(content)
+        data["content"] = to_html(content)
     if tags is not None:
-        body["data"]["tags"] = tags
-    if not body["data"]:
+        data["tags"] = tags
+    if not data:
         return "Error: at least one field must be provided."
-    await api.patch(f"/notes/{id}", body)
+    await api.patch(f"/notes/{id}", {"data": data})
     return f"Note {id} updated."
 
 
@@ -1159,8 +1157,8 @@ async def get_release(
 async def create_release(
     name: str = Field(description="Release name"),
     description: str = Field(description="Release description"),
-    release_group_id: str | None = Field(None, description="Release group UUID"),
-    state: Literal["tentative", "committed", "released"] | None = Field(None, description="Release state"),
+    release_group_id: str = Field(description="Release group UUID (required — use list_release_groups to find IDs)"),
+    state: Literal["upcoming", "completed"] | None = Field(None, description="Release state"),
     start_date: str | None = Field(None, description="Start date (YYYY-MM-DD)"),
     end_date: str | None = Field(None, description="End date (YYYY-MM-DD)"),
 ) -> str:
@@ -1169,10 +1167,9 @@ async def create_release(
         "data": {
             "name": name,
             "description": to_html(description),
+            "releaseGroup": {"id": release_group_id},
         }
     }
-    if release_group_id:
-        body["data"]["releaseGroup"] = {"id": release_group_id}
     if state:
         body["data"]["state"] = state
     if start_date or end_date:
@@ -1192,7 +1189,7 @@ async def update_release(
     id: str = Field(description="Release UUID"),
     name: str | None = Field(None, description="New name"),
     description: str | None = Field(None, description="New description"),
-    state: Literal["tentative", "committed", "released"] | None = Field(None, description="Release state"),
+    state: Literal["upcoming", "completed"] | None = Field(None, description="Release state"),
     archived: bool | None = Field(None, description="Archive flag"),
     start_date: str | None = Field(None, description="Start date"),
     end_date: str | None = Field(None, description="End date"),
@@ -1313,7 +1310,7 @@ async def delete_release_group(
 async def list_feature_release_assignments(
     feature_id: str | None = Field(None, description="Filter by feature UUID"),
     release_id: str | None = Field(None, description="Filter by release UUID"),
-    release_state: Literal["tentative", "committed", "released"] | None = Field(None, description="Filter by release state"),
+    release_state: Literal["upcoming", "completed"] | None = Field(None, description="Filter by release state"),
 ) -> str:
     """List feature-release assignments."""
     params: dict = {}
@@ -1347,9 +1344,10 @@ async def assign_feature_to_release(
     assigned: bool = Field(True, description="True to assign, False to unassign"),
 ) -> str:
     """Assign or unassign a feature to/from a release."""
-    params = {"feature.id": feature_id, "release.id": release_id}
     body = {"data": {"assigned": assigned}}
-    await api.put(f"/feature-release-assignments/assignment?feature.id={feature_id}&release.id={release_id}", body)
+    # Query params must be in the URL for PUT
+    path = f"/feature-release-assignments/assignment?feature.id={feature_id}&release.id={release_id}"
+    await api.put(path, body)
     action = "assigned to" if assigned else "unassigned from"
     return f"Feature {feature_id} {action} release {release_id}."
 
@@ -1398,10 +1396,10 @@ async def get_custom_field_value(
 async def set_custom_field_value(
     custom_field_id: str = Field(description="Custom field UUID"),
     entity_id: str = Field(description="Hierarchy entity UUID (feature, product, or component)"),
+    field_type: Literal["text", "number", "dropdown", "multi-dropdown", "member", "custom-description"] = Field(description="Custom field type (use list_custom_fields to find types)"),
     value: str = Field(description="Value to set (string, number, or JSON depending on field type)"),
 ) -> str:
     """Set the value of a custom field for a specific entity."""
-    # Try to parse as number or JSON, fall back to string
     import json as jsonlib
     parsed_value: object = value
     try:
@@ -1409,7 +1407,7 @@ async def set_custom_field_value(
     except (jsonlib.JSONDecodeError, ValueError):
         pass
 
-    body = {"data": {"value": parsed_value}}
+    body = {"data": {"type": field_type, "value": parsed_value}}
     await api.put(
         f"/hierarchy-entities/custom-fields-values/value?customField.id={custom_field_id}&hierarchyEntity.id={entity_id}",
         body,

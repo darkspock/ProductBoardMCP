@@ -53,7 +53,7 @@ async def get(path: str, params: dict | None = None) -> dict:
 async def post(path: str, json: dict | None = None) -> dict:
     r = await _get_client().post(path, json=json)
     _raise_on_error(r)
-    return r.json()
+    return r.json() if r.content else {}
 
 
 async def patch(path: str, json: dict) -> dict:
